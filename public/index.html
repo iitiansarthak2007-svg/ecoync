@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#17335d">
+<title>EcoSync — Campus Energy Console</title>
+<link rel="stylesheet" href="styles.css?v=2">
+<!-- Charts are rendered by our own dependency-free public/minichart.js —
+     no CDN, no external network call, so charts still render with zero
+     internet access in the demo room. -->
+<script src="minichart.js?v=2"></script>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<!-- Mobile app bar: only rendered at <=900px (see styles.css). Holds the
+     hamburger that opens the existing sidebar as an off-canvas drawer, so the
+     sidebar markup and its data-panel buttons are completely unchanged. -->
+<header class="appbar" id="appbar">
+  <button class="nav-toggle" id="nav-toggle" type="button"
+          aria-label="Open navigation menu" aria-expanded="false" aria-controls="sidebar">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+  </button>
+  <span class="brand"><span class="brand-mark" aria-hidden="true"></span>EcoSync</span>
+</header>
+<div class="nav-backdrop" id="nav-backdrop"></div>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="EcoSync sections">
+    <h1 class="brand"><span class="brand-mark"></span>EcoSync</h1>
+
+    <!-- Grouped into Monitoring vs. Configuration so operational views and
+         admin tools no longer sit in one undifferentiated list (fixes #8) -->
+    <div class="nav-group-label">Monitoring</div>
+    <button class="navbtn active" data-panel="overview"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="8" height="8" rx="1.3"/><rect x="13" y="3" width="8" height="5" rx="1.3"/><rect x="13" y="10" width="8" height="11" rx="1.3"/><rect x="3" y="13" width="8" height="8" rx="1.3"/></svg>Dashboard</button>
+    <button class="navbtn" data-panel="forecast"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="3,17 9,11 13,15 21,6"/><polyline points="15,6 21,6 21,12"/></svg>Forecast</button>
+    <button class="navbtn" data-panel="battery"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2" y="7" width="17" height="10" rx="2"/><rect x="21" y="10" width="2" height="4" fill="currentColor" stroke="none"/><rect x="5" y="10" width="8" height="4" fill="currentColor" stroke="none"/></svg>Battery</button>
+    <button class="navbtn" data-panel="alerts"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>Alerts</button>
+    <button class="navbtn" data-panel="devices"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="6" width="12" height="12" rx="1.3"/><line x1="9" y1="2" x2="9" y2="6"/><line x1="15" y1="2" x2="15" y2="6"/><line x1="9" y1="18" x2="9" y2="22"/><line x1="15" y1="18" x2="15" y2="22"/><line x1="2" y1="9" x2="6" y2="9"/><line x1="2" y1="15" x2="6" y2="15"/><line x1="18" y1="9" x2="22" y2="9"/><line x1="18" y1="15" x2="22" y2="15"/></svg>Devices</button>
+    <button class="navbtn" data-panel="impact"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 21c8 0 14-6 14-14V4h-3C8 4 4 10 4 18v3z"/><line x1="5" y1="21" x2="14" y2="12"/></svg>Impact</button>
+
+    <button class="navbtn" data-panel="insights"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6h5.4c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z"/></svg>AI Insights</button>
+    <button class="navbtn" data-panel="reports"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><polyline points="14,3 14,8 19,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>Reports</button>
+
+    <div class="nav-group-label">Configuration</div>
+    <button class="navbtn" data-panel="loads"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polygon points="13,2 5,14 11,14 9,22 19,9 12,9"/></svg>Smart Loads</button>
+    <button class="navbtn" data-panel="scenario"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="7" cy="18" r="2"/></svg>Scenario Simulator</button>
+    <button class="navbtn" data-panel="demo"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><polygon points="10,8 16,12 10,16" fill="currentColor" stroke="none"/></svg>Demo Mode</button>
+    <button class="navbtn" data-panel="settings"><svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3.2"/><line x1="12" y1="2" x2="12" y2="5.5"/><line x1="12" y1="18.5" x2="12" y2="22"/><line x1="2" y1="12" x2="5.5" y2="12"/><line x1="18.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="7.3" y2="7.3"/><line x1="16.7" y1="16.7" x2="19.1" y2="19.1"/><line x1="19.1" y1="4.9" x2="16.7" y2="7.3"/><line x1="7.3" y1="16.7" x2="4.9" y2="19.1"/></svg>Settings</button>
+
+    <div class="sidebar-foot">SIH26200 · Student Innovation<br>Team EcoSync</div>
+  </aside>
+
+  <main class="main" id="main-content">
+    <div class="conn-banner" id="conn-banner" role="status" aria-live="polite"><span class="msg">Cannot reach the EcoSync backend. Retrying…</span></div>
+    <div class="topbar">
+      <div class="btn-row">
+        <span class="pill live" id="pill-datasource"><span class="dot"></span><span class="pill-caps">Source</span> Demo simulation</span>
+        <span class="pill" id="pill-clock">— : —</span>
+        <span class="pill" id="pill-mode">AMBIENT</span>
+      </div>
+      <div class="topbar-right">
+        <span class="pill" id="pill-updated">last updated —</span>
+      </div>
+    </div>
+
+    <!-- ================= OVERVIEW / DASHBOARD ================= -->
+    <section class="panel active" id="panel-overview">
+      <h2>Campus energy console</h2>
+      <p class="lede">Live readings, the current EcoSync decision, and where every kilowatt is going right now.</p>
+
+      <!-- AI Copilot strip: the score and the single most important finding are
+           visible immediately; the full component breakdown is behind a toggle
+           (progressive disclosure) so the dashboard is not flooded with cards. -->
+      <div class="card copilot-strip" id="copilot-strip">
+        <div class="empty">Loading EcoSync Copilot…</div>
+      </div>
+
+      <div class="grid cols-4" id="dash-stats"></div>
+
+      <div class="section-title">🌱 EcoSync AI — Today's Insight</div>
+      <div class="card ai-insight-card" id="ai-insight-card">
+        <div class="empty">Loading AI insight…</div>
+      </div>
+
+      <div class="section-title">Current decision — EcoSync Intelligent Optimization Engine</div>
+      <div class="card decision-card" id="decision-card"></div>
+
+      <div class="section-title">Energy flow</div>
+      <div class="card">
+        <div class="flow" id="energy-flow"></div>
+      </div>
+
+      <div class="section-title">Last 24 hours</div>
+      <div class="card chart-card">
+        <canvas id="historyChart" role="img" aria-label="Solar generation, energy demand and battery state of charge over the last 24 hours"></canvas>
+        <div class="legend-row">
+          <span><span class="sw" style="background:#f58a22"></span>Solar (kW)</span>
+          <span><span class="sw" style="background:#c1502e"></span>Demand (kW)</span>
+          <span><span class="sw" style="background:#0b9293"></span>Battery (%)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FORECAST ================= -->
+    <section class="panel" id="panel-forecast">
+      <h2>Forecast — next 24 hours</h2>
+      <p class="lede" id="forecast-engine-label">EcoSync Forecast Engine (time-of-day profile + moving average). Not a trained ML model — a transparent, explainable heuristic.</p>
+      <div class="card chart-card">
+        <canvas id="forecastChart" role="img" aria-label="Forecast solar generation and energy demand for the next 24 hours"></canvas>
+        <div class="legend-row">
+          <span><span class="sw" style="background:#f58a22"></span>Solar forecast (kW)</span>
+          <span><span class="sw" style="background:#c1502e"></span>Demand forecast (kW)</span>
+        </div>
+      </div>
+      <div class="section-title">Forecast confidence</div>
+      <p class="lede" id="forecast-confidence-note">Confidence starts high for the next hour and decreases further out.</p>
+
+      <div class="section-title">🌱 EcoSync AI summary</div>
+      <div class="card ai-narrative" id="ai-forecast-narrative"><div class="empty">Loading AI summary…</div></div>
+    </section>
+
+    <!-- ================= SMART LOADS / SCHEDULER ================= -->
+    <section class="panel" id="panel-loads">
+      <h2>Smart load scheduler</h2>
+      <p class="lede">Each flexible load has an allowed window. EcoSync searches that window for the hours with the most forecast solar.</p>
+      <div class="btn-row">
+        <button class="btn" id="btn-optimize-schedule">Optimize schedule</button>
+        <span class="pill" id="pill-override-mode">MODE: AUTO</span>
+        <button class="btn ghost small" id="btn-toggle-override">Switch to manual override</button>
+      </div>
+      <div id="loads-list" style="margin-top:18px;"></div>
+      <div id="sched-result"></div>
+
+      <div class="section-title">Appliance analysis</div>
+      <p class="lede" id="appliance-basis-note"></p>
+      <div id="appliance-analytics"></div>
+      <div class="card ai-narrative" id="ai-schedule-narrative" style="display:none;"></div>
+    </section>
+
+    <!-- ================= SCENARIO SIMULATOR ================= -->
+    <section class="panel" id="panel-scenario">
+      <h2>Scenario simulator</h2>
+      <p class="lede">Override live readings to see EcoSync recalculate its decision, battery behaviour, and impact in real time.</p>
+      <div class="card">
+        <div class="slider-row">
+          <label>Solar generation <span id="s-solar-val" class="mono">4.0 kW</span></label>
+          <input type="range" id="s-solar" min="0" max="8" step="0.1" value="4">
+        </div>
+        <div class="slider-row">
+          <label>Energy demand <span id="s-demand-val" class="mono">3.0 kW</span></label>
+          <input type="range" id="s-demand" min="0" max="9" step="0.1" value="3">
+        </div>
+        <div class="slider-row">
+          <label>Battery state of charge <span id="s-batt-val" class="mono">55%</span></label>
+          <input type="range" id="s-batt" min="0" max="100" step="1" value="55">
+        </div>
+        <div class="slider-row">
+          <label>Grid price <span id="s-price-val" class="mono">₹8.0/kWh</span></label>
+          <input type="range" id="s-price" min="4" max="15" step="0.5" value="8">
+        </div>
+        <div class="toggle-row">
+          <div class="toggle"><button class="switch on" id="t-solar" data-key="solarAvailable"></button>Solar available</div>
+          <div class="toggle"><button class="switch on" id="t-battery" data-key="batteryAvailable"></button>Battery available</div>
+          <div class="toggle"><button class="switch on" id="t-grid" data-key="gridAvailable"></button>Grid available</div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-apply-scenario">Apply scenario</button>
+          <button class="btn ghost" id="btn-clear-scenario">Clear scenario (resume live)</button>
+        </div>
+      </div>
+
+      <div class="section-title">Resulting decision</div>
+      <div class="card decision-card" id="scenario-decision-card"></div>
+
+      <div class="section-title">AI what-if analysis</div>
+      <p class="lede">Each scenario re-runs EcoSync’s full-day model twice — once as configured, once with a single variable changed — and reports the difference with its assumptions.</p>
+      <div class="card">
+        <div class="btn-row" id="whatif-presets"></div>
+        <div class="whatif-custom" id="whatif-custom"></div>
+      </div>
+      <div id="whatif-result"></div>
+    </section>
+
+    <!-- ================= DEMO MODE ================= -->
+    <section class="panel" id="panel-demo">
+      <h2>Demo mode</h2>
+      <p class="lede">Plays a full simulated campus day — 06:00 to 22:00 — at high speed for a live judge walkthrough.</p>
+      <div class="card" style="text-align:center;">
+        <div class="demo-clock" id="demo-clock">06:00</div>
+        <div class="pill" id="demo-status-pill" style="margin-top:10px;">IDLE</div>
+        <div class="btn-row" style="justify-content:center; margin-top:18px;">
+          <button class="btn" id="btn-demo-start">Start demo</button>
+          <button class="btn ghost" id="btn-demo-pause">Pause</button>
+          <button class="btn ghost" id="btn-demo-reset">Reset</button>
+          <button class="btn ghost" id="btn-demo-exit">Exit to live</button>
+        </div>
+      </div>
+      <div class="section-title">Decisions during this run</div>
+      <div class="card demo-log" id="demo-log"></div>
+    </section>
+
+    <!-- ================= BATTERY ================= -->
+    <section class="panel" id="panel-battery">
+      <h2>Battery management</h2>
+      <div class="grid cols-3" id="battery-stats"></div>
+    </section>
+
+    <!-- ================= ALERTS ================= -->
+    <section class="panel" id="panel-alerts">
+      <h2>Anomaly alerts</h2>
+      <p class="lede">Generated when a live reading breaks from the expected profile — not on a timer, not at random.</p>
+      <div id="alerts-list"></div>
+    </section>
+
+    <!-- ================= DEVICES ================= -->
+    <section class="panel" id="panel-devices">
+      <h2>Devices</h2>
+      <p class="lede" id="devices-note"></p>
+      <div class="grid cols-2" id="devices-list"></div>
+    </section>
+
+    <!-- ================= IMPACT ================= -->
+    <section class="panel" id="panel-impact">
+      <h2>Impact — with EcoSync vs. without</h2>
+      <p class="lede">Computed from the same simulation, comparing the actual EcoSync-managed flow against a naive baseline with no battery mediation and no load scheduling.</p>
+      <div class="btn-row" style="margin-bottom:16px;">
+        <button class="btn ghost small" id="btn-export-impact">Export report (print / PDF)</button>
+      </div>
+      <div class="grid cols-2" id="impact-cards"></div>
+      <div class="assumptions" id="impact-assumptions"></div>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section class="panel" id="panel-settings">
+      <h2>Settings</h2>
+      <p class="lede">These values actually drive the calculations everywhere else in EcoSync — tariff shown on the dashboard, CO₂ figures, battery limits, and the building's demand scale. Changes save immediately and persist across restarts.</p>
+
+      <div class="card" id="settings-liveapi-note" style="margin-bottom:16px;"></div>
+
+      <div class="section-title">Electricity tariff (₹/kWh)</div>
+      <div class="card">
+        <div class="form-grid">
+          <label>Peak start hour<input type="number" id="set-peak-start" min="0" max="23"></label>
+          <label>Peak end hour<input type="number" id="set-peak-end" min="0" max="23"></label>
+          <label>Peak rate<input type="number" step="0.1" id="set-peak-rate"></label>
+          <label>Normal rate<input type="number" step="0.1" id="set-normal-rate"></label>
+          <label>Off-peak rate<input type="number" step="0.1" id="set-offpeak-rate"></label>
+          <label>Solar export rate<input type="number" step="0.1" id="set-export-rate"></label>
+        </div>
+      </div>
+
+      <div class="section-title">Grid &amp; environment</div>
+      <div class="card">
+        <div class="form-grid">
+          <label>Grid emission factor (kg CO₂/kWh)<input type="number" step="0.01" id="set-co2"></label>
+          <label>Building/load profile scale (×)<input type="number" step="0.1" id="set-scale"></label>
+          <label>Simulation speed (×)<input type="number" step="0.1" min="0.1" id="set-sim-speed"></label>
+        </div>
+      </div>
+
+      <div class="section-title">Battery</div>
+      <div class="card">
+        <div class="form-grid">
+          <label>Capacity (kWh)<input type="number" step="0.5" id="set-batt-cap"></label>
+          <label>Minimum reserve (%)<input type="number" id="set-batt-reserve"></label>
+          <label>Max charge/discharge rate (kW)<input type="number" step="0.1" id="set-batt-rate"></label>
+        </div>
+      </div>
+
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn" id="btn-save-settings">Save settings</button>
+        <span id="settings-saved-note" class="pill" style="display:none;">Saved ✓</span>
+      </div>
+
+      <div class="section-title">EcoSync AI memory</div>
+      <p class="lede">Preferences EcoSync AI takes into account when advising you. Everything stored is listed here, each field can be edited, and any of it can be removed. Credentials are never accepted.</p>
+      <div class="card" id="ai-memory-card"><div class="empty">Loading preferences…</div></div>
+
+      <div class="section-title">AI provider status</div>
+      <div class="card" id="ai-provider-card"><div class="empty">Checking providers…</div></div>
+
+      <div class="section-title">Live data API</div>
+      <div class="card">
+        <p class="lede" style="margin:0;">Configured via server environment variables (<span class="mono">ENERGY_API_URL</span>, <span class="mono">ENERGY_API_KEY</span>) — never in this page or in frontend code, so a key can never leak into the browser. See <span class="mono">.env.example</span> and the README for how to point EcoSync at a real energy API.</p>
+      </div>
+    </section>
+
+    <!-- ================= AI INSIGHTS CENTER ================= -->
+    <section class="panel" id="panel-insights">
+      <h2>AI Insights Center</h2>
+      <p class="lede">Everything EcoSync has concluded from your data, grouped by theme. Each insight carries the figures behind it, its impact, a recommended action and a confidence rating.</p>
+      <div class="btn-row" id="insight-filters"></div>
+      <div id="insights-list"><div class="empty">Loading insights…</div></div>
+    </section>
+
+    <!-- ================= REPORTS ================= -->
+    <section class="panel" id="panel-reports">
+      <h2>Energy reports</h2>
+      <p class="lede">Structured reports assembled from EcoSync’s own engines. Measured sections are labelled separately from modelled projections.</p>
+      <div class="btn-row" id="report-controls">
+        <button class="btn" data-report="daily">Daily</button>
+        <button class="btn ghost" data-report="weekly">Weekly</button>
+        <button class="btn ghost" data-report="monthly">Monthly</button>
+        <button class="btn ghost small" id="btn-print-report">Print / PDF</button>
+      </div>
+      <div id="report-body"><div class="empty">Choose a report period.</div></div>
+    </section>
+
+    <div class="footer-note">EcoSync prototype for SIH26200 · Rule-based optimization and heuristic forecasting, now paired with an Gemini-powered assistant for explanation and Q&amp;A · Simulated data unless a real MQTT sensor is connected.</div>
+  </main>
+</div>
+
+<!-- ================= ECOSYNC AI: floating button + chat panel ================= -->
+<button class="ai-fab" id="ai-fab" type="button" aria-haspopup="dialog" aria-controls="ai-chat-overlay" aria-expanded="false">🌱 Ask EcoSync AI</button>
+
+<div class="ai-chat-overlay" id="ai-chat-overlay">
+  <div class="ai-chat-panel" role="dialog" aria-modal="true" aria-label="EcoSync AI assistant">
+    <div class="ai-chat-header">
+      <div class="ai-chat-title"><span class="ai-avatar" aria-hidden="true">🌱</span>EcoSync AI</div>
+      <div class="ai-chat-header-actions">
+        <button class="btn ghost small" id="ai-chat-clear" type="button">Clear chat</button>
+        <button class="btn ghost icon-only" id="ai-chat-close" type="button" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div class="ai-chat-messages" id="ai-chat-messages" role="log" aria-live="polite" aria-label="Conversation"></div>
+    <div class="ai-quick-actions" id="ai-quick-actions" aria-label="Quick actions"></div>
+    <div class="ai-chat-suggestions" id="ai-chat-suggestions" aria-label="Suggested questions"></div>
+    <div class="ai-chat-inputrow">
+      <label class="sr-only" for="ai-chat-input">Ask EcoSync AI a question</label>
+      <textarea id="ai-chat-input" rows="1" placeholder="Ask about your energy usage… (Enter to send, Shift+Enter for a new line)"></textarea>
+      <button class="btn" id="ai-chat-send" type="button">Send</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js?v=2"></script>
+<script src="ecosyncAI.js?v=2"></script>
+<script src="copilot.js?v=2"></script>
+<script src="responsive.js?v=2"></script>
+</body>
+</html>

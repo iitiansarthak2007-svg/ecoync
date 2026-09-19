@@ -1,0 +1,10 @@
+{
+  "name": "ecosync-prototype",
+  "version": "1.0.0",
+  "description": "EcoSync — SIH26200 working prototype (Node core http backend + static frontend, zero external dependencies)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}
